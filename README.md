@@ -61,17 +61,44 @@ docker run -p 8080:8080 \
 
 ## Deploy (Render + Neon, free)
 
-1. **Neon:** create a project at [neon.tech](https://neon.tech), copy the connection string.
-   Append `;SSL Mode=Require;Trust Server Certificate=true` if not already present (Neon requires SSL).
-2. **Render:** New → **Web Service** → connect this Git repo. Render detects the `Dockerfile`
-   (or use the `render.yaml` blueprint). Choose the **Free** plan.
-3. Set environment variables in the Render dashboard:
-   - `ConnectionStrings__Default` = your Neon connection string
-   - `APP_PASSCODE` = your chosen login passcode
-4. Deploy. Migrations run automatically on startup. Open the Render URL and log in.
+### 1. Neon (database)
+
+Create a project at [neon.tech](https://neon.tech) (free, no card) and copy the **pooled**
+connection string (the host contains `-pooler`).
+
+> ⚠️ **Convert the URI to Npgsql format.** Neon gives you a `postgresql://` URI, but the .NET
+> driver (Npgsql) uses key/value form. Translate it:
+>
+> ```
+> postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require&channel_binding=require
+> ```
+> becomes
+> ```
+> Host=HOST;Database=DBNAME;Username=USER;Password=PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+> ```
+>
+> - Rearrange `USER:PASSWORD@HOST/DBNAME` into the `Host=…;Database=…;Username=…;Password=…` keywords.
+> - `sslmode=require` → `SSL Mode=Require;Trust Server Certificate=true`.
+> - **Drop `channel_binding=require`** — it's a libpq-only parameter and not a valid Npgsql keyword;
+>   Npgsql negotiates channel binding automatically over SSL.
+
+### 2. Render (app)
+
+New → **Web Service** → connect this Git repo. Render detects the `Dockerfile` (or use the
+`render.yaml` blueprint). Choose the **Free** plan.
+
+Set environment variables in the Render dashboard:
+
+- `ConnectionStrings__Default` = the converted Npgsql connection string from step 1
+- `APP_PASSCODE` = your chosen login passcode
+
+### 3. Deploy
+
+Save → Render builds and deploys. EF Core migrations run automatically on startup, creating the
+`Goals`, `Logs`, and Data Protection key tables in Neon on first boot. Open the Render URL and log in.
 
 > Note: the free Render service sleeps after ~15 min idle, so the first request after a nap
-> takes ~30–60s to wake. Fine for personal use.
+> takes ~30–60s to wake (Neon itself resumes instantly). Fine for personal use.
 
 ## Data model
 
