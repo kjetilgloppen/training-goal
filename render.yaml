@@ -1,0 +1,15 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# Deploys the combined ASP.NET + Vue app as a single free Docker web service.
+services:
+  - type: web
+    name: training-goal
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      # Neon Postgres connection string — set in the Render dashboard (kept secret).
+      - key: ConnectionStrings__Default
+        sync: false
+      # Your login passcode — set in the Render dashboard (kept secret).
+      - key: APP_PASSCODE
+        sync: false

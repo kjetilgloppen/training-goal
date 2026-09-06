@@ -1,0 +1,12 @@
+# Build outputs & deps — rebuilt inside the image
+**/bin
+**/obj
+**/node_modules
+server/wwwroot
+client/dist
+
+# Local/dev cruft
+**/*.log
+**/.vs
+**/.vscode
+.git

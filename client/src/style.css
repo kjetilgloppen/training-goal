@@ -1,0 +1,252 @@
+:root {
+  --text: #4b5563;
+  --text-h: #08060d;
+  --muted: #8b8b93;
+  --bg: #ffffff;
+  --card: #ffffff;
+  --border: #e5e4e7;
+  --accent: #7c3aed;
+  --accent-bg: rgba(124, 58, 237, 0.1);
+  --ahead: #16a34a;
+  --ahead-bg: rgba(22, 163, 74, 0.12);
+  --behind: #dc2626;
+  --behind-bg: rgba(220, 38, 38, 0.12);
+  --shadow: rgba(0, 0, 0, 0.06) 0 2px 8px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #b6bcc6;
+    --text-h: #f3f4f6;
+    --muted: #8b909b;
+    --bg: #14151a;
+    --card: #1c1e26;
+    --border: #2e303a;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.16);
+    --ahead: #4ade80;
+    --ahead-bg: rgba(74, 222, 128, 0.16);
+    --behind: #f87171;
+    --behind-bg: rgba(248, 113, 113, 0.16);
+    --shadow: rgba(0, 0, 0, 0.4) 0 2px 8px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  color: var(--text-h);
+  margin: 0 0 4px;
+}
+h2 {
+  font-size: 20px;
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Layout */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+.brand {
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--text-h);
+  text-decoration: none;
+}
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.goal-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 14px;
+  transition: border-color 0.15s;
+}
+.goal-card:hover {
+  border-color: var(--accent);
+}
+
+/* Buttons & forms */
+button,
+.btn {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-h);
+  padding: 8px 14px;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.btn-lg {
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 4px;
+}
+.danger {
+  color: var(--behind);
+  border: none;
+  background: none;
+  padding: 2px 6px;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  width: 100%;
+}
+.field {
+  margin-bottom: 12px;
+}
+.field label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.row > * {
+  flex: 1 1 120px;
+}
+
+/* Progress bar */
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  margin: 10px 0;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* Status badge */
+.badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.badge.ahead {
+  color: var(--ahead);
+  background: var(--ahead-bg);
+}
+.badge.behind {
+  color: var(--behind);
+  background: var(--behind-bg);
+}
+
+/* Stats grid */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.stat .value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.stat .label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+.error {
+  color: var(--behind);
+  font-size: 14px;
+  margin: 8px 0;
+}
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.log-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}

@@ -1,0 +1,19 @@
+# .NET
+server/bin/
+server/obj/
+server/run*.log
+
+# Generated SPA output (built by CI/Docker or `npm run build`)
+server/wwwroot/
+
+# Node
+client/node_modules/
+client/dist/
+
+# Env / secrets
+*.env
+.env.local
+
+# IDE
+.vs/
+.idea/
