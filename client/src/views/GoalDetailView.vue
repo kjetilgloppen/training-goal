@@ -27,6 +27,35 @@ const sortedLogs = computed(() =>
   goal.value ? [...goal.value.logs].sort((a, b) => (a.date < b.date ? 1 : -1)) : [],
 )
 
+// Same-day occurrence index per log (0-based). Entries within a day are ordered by
+// ascending id (insertion order), so the first entry of a day is index 0 (untinted)
+// and each subsequent same-day entry escalates.
+const dupIndexById = computed(() => {
+  const map = new Map<number, number>()
+  if (!goal.value) return map
+  const byDate = new Map<string, number[]>()
+  for (const l of goal.value.logs) {
+    const arr = byDate.get(l.date) ?? []
+    arr.push(l.id)
+    byDate.set(l.date, arr)
+  }
+  for (const ids of byDate.values()) {
+    ids.sort((a, b) => a - b)
+    ids.forEach((id, i) => map.set(id, i))
+  }
+  return map
+})
+
+// Derive a tint from the same-day occurrence index: the first entry (index 0) is
+// untinted; each subsequent same-day entry keeps the same blue hue but deepens the
+// alpha, so repeats read as a progressively darker blue over --card.
+function dupStyle(logId: number) {
+  const i = dupIndexById.value.get(logId) ?? 0
+  if (i === 0) return undefined
+  const alpha = Math.min(0.14 + (i - 1) * 0.1, 0.65)
+  return { background: `hsl(215 80% 50% / ${alpha})` }
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -169,7 +198,7 @@ onMounted(load)
       <h2>History ({{ goal.logs.length }})</h2>
       <p v-if="goal.logs.length === 0" class="muted">No entries yet.</p>
       <ul class="log-list">
-        <li v-for="l in sortedLogs" :key="l.id">
+        <li v-for="l in sortedLogs" :key="l.id" :style="dupStyle(l.id)">
           <span>
             <strong>{{ fmtDate(l.date) }}</strong>
             <span v-if="l.durationSeconds" class="muted"> · {{ formatDuration(l.durationSeconds) }}</span>

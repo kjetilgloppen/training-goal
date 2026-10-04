@@ -5,7 +5,7 @@ Future work, roughly grouped. Check items off as they land, and record shipped o
 
 ## Features
 
-- [ ] When two or more entires are added on the same date, give some kind of indicator for this, like color or small text, 2nd, 3rd, etc.
+- [x] When two or more entires are added on the same date, give some kind of indicator for this, like color or small text, 2nd, 3rd, etc.
 - [ ] Let user zoom in chart
 - [ ] Chart should also be shown in it's own page and if user tilts the phone it should show in landscape mode (like Netatmo)
 - [ ] Edit existing goals and log entries (currently create + delete only).

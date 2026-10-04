@@ -15,6 +15,11 @@ Workflow:
 
 ## [Unreleased]
 
+### Added
+
+- History list highlights repeat entries on the same day: the first entry is untinted and
+  each subsequent same-day entry gets a progressively deeper blue background.
+
 ## [0.1.0] - 2026-09-06
 
 ### Added
