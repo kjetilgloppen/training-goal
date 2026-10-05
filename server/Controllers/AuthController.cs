@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TrainingGoal.Api.Auth;
 
 namespace TrainingGoal.Api.Controllers;
 
@@ -10,26 +12,22 @@ namespace TrainingGoal.Api.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IConfiguration _config;
+    private readonly GoogleAuthStatus _google;
 
-    public AuthController(IConfiguration config) => _config = config;
+    public AuthController(GoogleAuthStatus google) => _google = google;
 
-    [HttpPost("login")]
+    /// <summary>Starts the Google sign-in flow; Google redirects back to /signin-google, then to "/".</summary>
+    [HttpGet("google")]
     [AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public IActionResult GoogleLogin()
     {
-        var passcode = _config["APP_PASSCODE"];
-        if (string.IsNullOrEmpty(passcode) || request.Passcode != passcode)
-            return Unauthorized(new { message = "Invalid passcode." });
+        if (!_google.Configured)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Google sign-in is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)." });
 
-        var claims = new List<Claim> { new(ClaimTypes.Name, "owner") };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity),
-            new AuthenticationProperties { IsPersistent = true });
-
-        return Ok(new { authenticated = true });
+        return Challenge(
+            new AuthenticationProperties { RedirectUri = "/" },
+            GoogleDefaults.AuthenticationScheme);
     }
 
     [HttpPost("logout")]
@@ -43,5 +41,10 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     [AllowAnonymous]
     public IActionResult Me() =>
-        Ok(new { authenticated = User.Identity?.IsAuthenticated ?? false });
+        Ok(new
+        {
+            authenticated = User.Identity?.IsAuthenticated ?? false,
+            name = User.FindFirstValue(ClaimTypes.Name),
+            email = User.FindFirstValue(ClaimTypes.Email),
+        });
 }

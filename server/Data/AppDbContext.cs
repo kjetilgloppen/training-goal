@@ -8,6 +8,7 @@ public class AppDbContext : DbContext, IDataProtectionKeyContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<User> Users => Set<User>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<LogEntry> Logs => Set<LogEntry>();
 
@@ -16,6 +17,16 @@ public class AppDbContext : DbContext, IDataProtectionKeyContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.GoogleSubject)
+            .IsUnique();
+
+        modelBuilder.Entity<Goal>()
+            .HasOne(g => g.User)
+            .WithMany(u => u.Goals)
+            .HasForeignKey(g => g.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<LogEntry>()
             .HasOne(l => l.Goal)
             .WithMany(g => g.Logs)

@@ -12,9 +12,15 @@ export default defineConfig({
   server: {
     // In dev, forward API calls to the running ASP.NET app (dotnet run, http profile).
     proxy: {
+      // changeOrigin is left off on purpose: the API then sees Host=localhost:5173, so the
+      // Google redirect URI (/signin-google) and the post-login redirect stay on the Vite
+      // origin instead of jumping to the API port.
       '/api': {
         target: 'http://localhost:5107',
-        changeOrigin: true,
+      },
+      // Google redirects back here after sign-in; the server handles it.
+      '/signin-google': {
+        target: 'http://localhost:5107',
       },
     },
   },
