@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using TrainingGoal.Api.Auth;
 using TrainingGoal.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,13 +22,26 @@ builder.Services.AddDataProtection()
     .PersistKeysToDbContext<AppDbContext>()
     .SetApplicationName("TrainingGoal");
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+// Render terminates TLS in front of the container; trust its X-Forwarded-* headers so the
+// request scheme is https (needed for Secure cookies and the Google redirect URI).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+var authBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+
+authBuilder.AddCookie(options =>
     {
-        options.Cookie.Name = "tg_auth";
+        // Renamed from "tg_auth" so sessions from the old passcode login (no user id) are ignored.
+        options.Cookie.Name = "tg_session";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
         options.ExpireTimeSpan = TimeSpan.FromDays(30);
         options.SlidingExpiration = true;
 
@@ -42,6 +58,24 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
+// Google sign-in is only registered when credentials are configured, so the app still
+// starts (and /api/auth/google reports 503) on a machine without them.
+var googleClientId = builder.Configuration["GOOGLE_CLIENT_ID"];
+var googleClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"];
+var googleConfigured = !string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret);
+if (googleConfigured)
+{
+    authBuilder.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.ClientId = googleClientId!;
+        options.ClientSecret = googleClientSecret!;
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.Events.OnTicketReceived = GoogleSignIn.OnTicketReceived;
+        options.Events.OnRemoteFailure = GoogleSignIn.OnRemoteFailure;
+    });
+}
+builder.Services.AddSingleton(new GoogleAuthStatus(googleConfigured));
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -55,6 +89,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {

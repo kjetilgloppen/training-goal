@@ -10,6 +10,14 @@ services:
       # Neon Postgres connection string — set in the Render dashboard (kept secret).
       - key: ConnectionStrings__Default
         sync: false
-      # Your login passcode — set in the Render dashboard (kept secret).
-      - key: APP_PASSCODE
+      # Google OAuth credentials (Google Cloud Console) — set in the Render dashboard.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # Your Google email; claims the goals created before multi-user support.
+      - key: OWNER_EMAIL
+        sync: false
+      # Comma-separated tester emails allowed to sign in (OWNER_EMAIL is always allowed).
+      - key: ALLOWED_EMAILS
         sync: false
