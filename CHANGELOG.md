@@ -19,6 +19,24 @@ Workflow:
 
 - History list highlights repeat entries on the same day: the first entry is untinted and
   each subsequent same-day entry gets a progressively deeper blue background.
+- Google sign-in with an email allowlist (`ALLOWED_EMAILS`, `OWNER_EMAIL`) so others can test.
+- `Users` table; goals are owned by a user. Existing goals are claimed by `OWNER_EMAIL` on its
+  first sign-in.
+
+### Changed
+
+- All goal and log endpoints are scoped to the signed-in user; other users' ids return 404.
+- Login cookie is `Secure` outside development, and forwarded headers are honoured behind
+  Render's TLS proxy.
+- `/api/auth/me` now also returns the user's name and email; the header shows the name.
+
+### Removed
+
+- Shared passcode login (`APP_PASSCODE`).
+
+### Security
+
+- Closed an access hole where any signed-in session could read or delete any goal or log by id.
 
 ## [0.1.0] - 2026-09-06
 

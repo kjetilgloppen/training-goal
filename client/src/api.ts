@@ -18,6 +18,12 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export interface CurrentUser {
+  authenticated: boolean
+  name: string | null
+  email: string | null
+}
+
 export class UnauthorizedError extends Error {
   constructor() {
     super('Unauthorized')
@@ -27,15 +33,8 @@ export class UnauthorizedError extends Error {
 
 export const api = {
   // --- auth ---
-  async me(): Promise<boolean> {
-    const r = await request<{ authenticated: boolean }>('/api/auth/me')
-    return r.authenticated
-  },
-  async login(passcode: string): Promise<void> {
-    await request('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ passcode }),
-    })
+  async me(): Promise<CurrentUser> {
+    return request<CurrentUser>('/api/auth/me')
   },
   async logout(): Promise<void> {
     await request('/api/auth/logout', { method: 'POST' })

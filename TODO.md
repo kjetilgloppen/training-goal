@@ -23,7 +23,12 @@ Future work, roughly grouped. Check items off as they land, and record shipped o
 
 ## Auth
 
-- [ ] Swap the single passcode for GitHub OAuth (or similar) if the app is ever shared.
+- [x] Swap the single passcode for OAuth if the app is ever shared (Google sign-in + allowlist).
+- [ ] Public launch: move the Google consent screen to *In production* (needs privacy policy URL),
+      and decide what an empty `ALLOWED_EMAILS` means (currently nobody can sign in).
+- [ ] Let users delete their account and data (cascade delete already covers goals and logs).
+- [ ] Rate limiting on the API; consider paid Render/Neon tiers for public traffic.
+- [ ] Optional: more sign-in providers (GitHub, Microsoft) for users without a Google account.
 
 ## UX / mobile
 

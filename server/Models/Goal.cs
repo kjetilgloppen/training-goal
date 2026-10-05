@@ -24,5 +24,12 @@ public class Goal
 
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>
+    /// Owner of the goal. Null only for goals created before multi-user support; those are
+    /// claimed by the OWNER_EMAIL account on its first sign-in and invisible to everyone else.
+    /// </summary>
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
     public List<LogEntry> Logs { get; set; } = new();
 }

@@ -17,8 +17,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth) return true
   try {
-    const authed = await api.me()
-    return authed ? true : { name: 'login' }
+    const me = await api.me()
+    return me.authenticated ? true : { name: 'login' }
   } catch (e) {
     if (e instanceof UnauthorizedError) return { name: 'login' }
     return true
