@@ -17,3 +17,4 @@ client/dist/
 # IDE
 .vs/
 .idea/
+*.DotSettings.user

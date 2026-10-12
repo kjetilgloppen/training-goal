@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TrainingGoal.Api.Auth;
 using TrainingGoal.Api.Data;
 using TrainingGoal.Api.Models;
 
@@ -18,7 +19,9 @@ public class GoalsController : ControllerBase
     [HttpGet]
     public async Task<List<GoalDto>> GetGoals()
     {
+        var userId = User.GetUserId();
         var goals = await _db.Goals
+            .Where(g => g.UserId == userId)
             .Include(g => g.Logs.OrderBy(l => l.Date))
             .OrderByDescending(g => g.CreatedAt)
             .ToListAsync();
@@ -29,9 +32,10 @@ public class GoalsController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GoalDto>> GetGoal(int id)
     {
+        var userId = User.GetUserId();
         var goal = await _db.Goals
             .Include(g => g.Logs.OrderBy(l => l.Date))
-            .FirstOrDefaultAsync(g => g.Id == id);
+            .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
 
         return goal is null ? NotFound() : ToDto(goal);
     }
@@ -50,6 +54,7 @@ public class GoalsController : ControllerBase
             PeriodEnd = req.PeriodEnd,
             Unit = string.IsNullOrWhiteSpace(req.Unit) ? null : req.Unit.Trim(),
             CreatedAt = DateTime.UtcNow,
+            UserId = User.GetUserId(),
         };
 
         _db.Goals.Add(goal);
@@ -61,7 +66,8 @@ public class GoalsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteGoal(int id)
     {
-        var goal = await _db.Goals.FindAsync(id);
+        var userId = User.GetUserId();
+        var goal = await _db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
         if (goal is null) return NotFound();
 
         _db.Goals.Remove(goal);
@@ -74,7 +80,8 @@ public class GoalsController : ControllerBase
     [HttpPost("{goalId:int}/logs")]
     public async Task<ActionResult<LogDto>> AddLog(int goalId, [FromBody] CreateLogRequest req)
     {
-        var goal = await _db.Goals.FindAsync(goalId);
+        var userId = User.GetUserId();
+        var goal = await _db.Goals.FirstOrDefaultAsync(g => g.Id == goalId && g.UserId == userId);
         if (goal is null) return NotFound(new { message = "Goal not found." });
 
         var log = new LogEntry

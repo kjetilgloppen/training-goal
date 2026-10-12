@@ -6,15 +6,18 @@ import { api } from './api'
 const router = useRouter()
 const route = useRoute()
 const loggedIn = ref(false)
+const userName = ref('')
 
-// Keep the header's logout button in sync with the current route/session.
+// Keep the header's user name and logout button in sync with the current route/session.
 watchEffect(async () => {
   if (route.name === 'login') {
     loggedIn.value = false
     return
   }
   try {
-    loggedIn.value = await api.me()
+    const me = await api.me()
+    loggedIn.value = me.authenticated
+    userName.value = me.name ?? me.email ?? ''
   } catch {
     loggedIn.value = false
   }
@@ -30,6 +33,7 @@ async function logout() {
 <template>
   <header class="app-header">
     <RouterLink to="/" class="brand">🏔️ Training Goals</RouterLink>
+    <span v-if="loggedIn" class="muted" style="font-size: 14px; margin-left: auto">{{ userName }}</span>
     <button v-if="loggedIn" class="link-btn" @click="logout">Log out</button>
   </header>
   <main class="container">
