@@ -46,6 +46,8 @@ export const api = {
   getGoal: (id: number) => request<Goal>(`/api/goals/${id}`),
   createGoal: (body: CreateGoalRequest) =>
     request<Goal>('/api/goals', { method: 'POST', body: JSON.stringify(body) }),
+  updateGoal: (id: number, body: CreateGoalRequest) =>
+    request<Goal>(`/api/goals/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteGoal: (id: number) =>
     request<void>(`/api/goals/${id}`, { method: 'DELETE' }),
 
@@ -55,6 +57,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  updateLog: (id: number, body: CreateLogRequest) =>
+    request<LogEntry>(`/api/logs/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteLog: (id: number) =>
     request<void>(`/api/logs/${id}`, { method: 'DELETE' }),
 }

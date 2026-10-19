@@ -2,9 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, UnauthorizedError } from '../api'
-import type { Goal } from '../types'
-import { computeStats, toIso, parseDate, toSeconds, formatDuration } from '../pace'
+import type { CreateGoalRequest, CreateLogRequest, Goal } from '../types'
+import { computeStats, parseDate, formatDuration } from '../pace'
 import ProgressChart from '../components/ProgressChart.vue'
+import LogForm from '../components/LogForm.vue'
+import NewGoalForm from '../components/NewGoalForm.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,13 +15,6 @@ const id = Number(route.params.id)
 const goal = ref<Goal | null>(null)
 const loading = ref(true)
 const error = ref('')
-
-// add-log form
-const logDate = ref(toIso(new Date()))
-const logHours = ref<number | null>(null)
-const logMinutes = ref<number | null>(null)
-const logSeconds = ref<number | null>(null)
-const logNote = ref('')
 
 const stats = computed(() => (goal.value ? computeStats(goal.value) : null))
 const unit = computed(() => goal.value?.unit || 'done')
@@ -69,18 +64,52 @@ async function load() {
   }
 }
 
-async function addLog() {
+const addForm = ref<InstanceType<typeof LogForm>>()
+
+async function addLog(body: CreateLogRequest) {
   if (!goal.value) return
   try {
-    await api.addLog(goal.value.id, {
-      date: logDate.value,
-      durationSeconds: toSeconds(logHours.value, logMinutes.value, logSeconds.value),
-      note: logNote.value.trim() || null,
-    })
-    logHours.value = null
-    logMinutes.value = null
-    logSeconds.value = null
-    logNote.value = ''
+    await api.addLog(goal.value.id, body)
+    addForm.value?.reset()
+    await load()
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
+// edit-goal form
+const editingGoal = ref(false)
+// Bumped each time the editor opens, so a save that finishes after the editor was closed
+// and reopened does not close the newer editor.
+let goalEditSession = 0
+
+function startEditGoal() {
+  goalEditSession++
+  editingGoal.value = true
+}
+
+async function saveGoal(body: CreateGoalRequest) {
+  if (!goal.value) return
+  const session = goalEditSession
+  try {
+    goal.value = await api.updateGoal(goal.value.id, body)
+    if (session === goalEditSession) editingGoal.value = false
+    await load()
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
+// inline edit of a single log row
+const editLogId = ref<number | null>(null)
+
+async function saveLog(body: CreateLogRequest) {
+  const logId = editLogId.value
+  if (logId == null) return
+  try {
+    await api.updateLog(logId, body)
+    // Another entry may have been opened for editing while this save was pending.
+    if (editLogId.value === logId) editLogId.value = null
     await load()
   } catch (e) {
     error.value = (e as Error).message
@@ -171,27 +200,9 @@ onMounted(load)
       </div>
     </div>
 
-    <div class="card">
+    <div v-show="editLogId === null" class="card">
       <h2>Log an entry</h2>
-      <form @submit.prevent="addLog">
-        <div class="field">
-          <label>Date</label>
-          <input v-model="logDate" type="date" />
-        </div>
-        <div class="field">
-          <label>Duration (optional)</label>
-          <div class="row">
-            <input v-model.number="logHours" type="number" min="0" placeholder="h" aria-label="hours" />
-            <input v-model.number="logMinutes" type="number" min="0" max="59" placeholder="m" aria-label="minutes" />
-            <input v-model.number="logSeconds" type="number" min="0" max="59" placeholder="s" aria-label="seconds" />
-          </div>
-        </div>
-        <div class="field">
-          <label>Note (optional)</label>
-          <input v-model="logNote" placeholder="e.g. Mt. Rainier, great weather" />
-        </div>
-        <button type="submit" class="btn btn-primary">Add entry</button>
-      </form>
+      <LogForm ref="addForm" submit-label="Add entry" @submit="addLog" />
     </div>
 
     <div class="card">
@@ -199,16 +210,57 @@ onMounted(load)
       <p v-if="goal.logs.length === 0" class="muted">No entries yet.</p>
       <ul class="log-list">
         <li v-for="l in sortedLogs" :key="l.id" :style="dupStyle(l.id)">
+          <div v-if="editLogId === l.id" style="width: 100%">
+            <h2>Edit entry · {{ fmtDate(l.date) }}</h2>
+            <LogForm
+              :initial="{ date: l.date, durationSeconds: l.durationSeconds, note: l.note }"
+              submit-label="Save"
+              @submit="saveLog"
+              @cancel="editLogId = null"
+            />
+          </div>
+          <template v-else>
           <span>
             <strong>{{ fmtDate(l.date) }}</strong>
             <span v-if="l.durationSeconds" class="muted"> · {{ formatDuration(l.durationSeconds) }}</span>
             <span v-if="l.note" class="muted"> · {{ l.note }}</span>
           </span>
-          <button class="danger" @click="deleteLog(l.id)">Delete</button>
+          <span class="log-actions">
+            <button class="icon-btn" title="Edit entry" aria-label="Edit entry" @click="editLogId = l.id">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </button>
+            <button class="icon-btn danger" title="Delete entry" aria-label="Delete entry" @click="deleteLog(l.id)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6M14 11v6" />
+              </svg>
+            </button>
+          </span>
+          </template>
         </li>
       </ul>
     </div>
 
-    <button class="danger" style="margin-top: 8px" @click="deleteGoal">Delete this goal</button>
+    <NewGoalForm
+      v-if="editingGoal"
+      :initial="{
+        name: goal.name,
+        targetCount: goal.targetCount,
+        unit: goal.unit,
+        periodStart: goal.periodStart,
+        periodEnd: goal.periodEnd,
+      }"
+      @update="saveGoal"
+      @cancel="editingGoal = false"
+    />
+    <div v-else class="goal-links">
+      <button class="link-btn" @click="startEditGoal">Edit goal</button>
+      <button class="link-btn danger" @click="deleteGoal">Delete goal</button>
+    </div>
   </div>
 </template>
