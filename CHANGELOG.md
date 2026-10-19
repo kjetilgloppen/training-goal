@@ -29,6 +29,7 @@ Workflow:
 
 ### Changed
 
+- Deleting a history entry is now a trash icon button, so each row stays on one line on phones.
 - All goal and log endpoints are scoped to the signed-in user; other users' ids return 404.
 - Login cookie is `Secure` outside development, and forwarded headers are honoured behind
   Render's TLS proxy.
