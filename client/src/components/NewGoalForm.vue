@@ -51,7 +51,7 @@ function reset() {
           </div>
           <div class="field">
             <label>Unit (optional)</label>
-            <input v-model="unit" placeholder="hikes" />
+            <input v-model="unit" maxlength="50" placeholder="hikes" />
           </div>
         </div>
         <div class="row">

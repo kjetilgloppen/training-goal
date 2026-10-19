@@ -11,7 +11,7 @@ public record CreateGoalRequest(
     [Range(1, 100000)] int TargetCount,
     DateOnly PeriodStart,
     DateOnly PeriodEnd,
-    string? Unit);
+    [MaxLength(50)] string? Unit);
 
 public record LogDto(int Id, DateOnly Date, int? DurationSeconds, string? Note);
 
