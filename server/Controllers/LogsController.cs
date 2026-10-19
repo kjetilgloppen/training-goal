@@ -9,21 +9,17 @@ namespace TrainingGoal.Api.Controllers;
 [ApiController]
 [Route("api/logs")]
 [Authorize]
-public class LogsController : ControllerBase
+public class LogsController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public LogsController(AppDbContext db) => _db = db;
-
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteLog(int id)
     {
         var userId = User.GetUserId();
-        var log = await _db.Logs.FirstOrDefaultAsync(l => l.Id == id && l.Goal!.UserId == userId);
+        var log = await db.Logs.FirstOrDefaultAsync(l => l.Id == id && l.Goal!.UserId == userId);
         if (log is null) return NotFound();
 
-        _db.Logs.Remove(log);
-        await _db.SaveChangesAsync();
+        db.Logs.Remove(log);
+        await db.SaveChangesAsync();
         return NoContent();
     }
 }
