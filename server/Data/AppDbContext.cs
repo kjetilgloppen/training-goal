@@ -4,10 +4,8 @@ using TrainingGoal.Api.Models;
 
 namespace TrainingGoal.Api.Data;
 
-public class AppDbContext : DbContext, IDataProtectionKeyContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<User> Users => Set<User>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<LogEntry> Logs => Set<LogEntry>();

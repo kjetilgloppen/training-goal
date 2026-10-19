@@ -10,20 +10,18 @@ namespace TrainingGoal.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController(GoogleAuthStatus google) : ControllerBase
 {
-    private readonly GoogleAuthStatus _google;
-
-    public AuthController(GoogleAuthStatus google) => _google = google;
-
     /// <summary>Starts the Google sign-in flow; Google redirects back to /signin-google, then to "/".</summary>
     [HttpGet("google")]
     [AllowAnonymous]
     public IActionResult GoogleLogin()
     {
-        if (!_google.Configured)
+        if (!google.Configured)
+        {
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 new { message = "Google sign-in is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)." });
+        }
 
         return Challenge(
             new AuthenticationProperties { RedirectUri = "/" },
@@ -46,5 +44,6 @@ public class AuthController : ControllerBase
             authenticated = User.Identity?.IsAuthenticated ?? false,
             name = User.FindFirstValue(ClaimTypes.Name),
             email = User.FindFirstValue(ClaimTypes.Email),
+            picture = User.FindFirstValue("picture"),
         });
 }

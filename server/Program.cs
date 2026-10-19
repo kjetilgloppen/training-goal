@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
@@ -73,6 +74,7 @@ if (googleConfigured)
         options.ClientId = googleClientId!;
         options.ClientSecret = googleClientSecret!;
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.ClaimActions.MapJsonKey("picture", "picture");
         options.Events.OnTicketReceived = GoogleSignIn.OnTicketReceived;
         options.Events.OnRemoteFailure = GoogleSignIn.OnRemoteFailure;
     });

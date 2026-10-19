@@ -10,17 +10,13 @@ namespace TrainingGoal.Api.Controllers;
 [ApiController]
 [Route("api/goals")]
 [Authorize]
-public class GoalsController : ControllerBase
+public class GoalsController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public GoalsController(AppDbContext db) => _db = db;
-
     [HttpGet]
     public async Task<List<GoalDto>> GetGoals()
     {
         var userId = User.GetUserId();
-        var goals = await _db.Goals
+        var goals = await db.Goals
             .Where(g => g.UserId == userId)
             .Include(g => g.Logs.OrderBy(l => l.Date))
             .OrderByDescending(g => g.CreatedAt)
@@ -33,7 +29,7 @@ public class GoalsController : ControllerBase
     public async Task<ActionResult<GoalDto>> GetGoal(int id)
     {
         var userId = User.GetUserId();
-        var goal = await _db.Goals
+        var goal = await db.Goals
             .Include(g => g.Logs.OrderBy(l => l.Date))
             .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
 
@@ -44,7 +40,9 @@ public class GoalsController : ControllerBase
     public async Task<ActionResult<GoalDto>> CreateGoal([FromBody] CreateGoalRequest req)
     {
         if (req.PeriodEnd < req.PeriodStart)
+        {
             return BadRequest(new { message = "PeriodEnd must be on or after PeriodStart." });
+        }
 
         var goal = new Goal
         {
@@ -57,8 +55,8 @@ public class GoalsController : ControllerBase
             UserId = User.GetUserId(),
         };
 
-        _db.Goals.Add(goal);
-        await _db.SaveChangesAsync();
+        db.Goals.Add(goal);
+        await db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetGoal), new { id = goal.Id }, ToDto(goal));
     }
@@ -67,11 +65,11 @@ public class GoalsController : ControllerBase
     public async Task<IActionResult> DeleteGoal(int id)
     {
         var userId = User.GetUserId();
-        var goal = await _db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
         if (goal is null) return NotFound();
 
-        _db.Goals.Remove(goal);
-        await _db.SaveChangesAsync();
+        db.Goals.Remove(goal);
+        await db.SaveChangesAsync();
         return NoContent();
     }
 
@@ -81,7 +79,7 @@ public class GoalsController : ControllerBase
     public async Task<ActionResult<LogDto>> AddLog(int goalId, [FromBody] CreateLogRequest req)
     {
         var userId = User.GetUserId();
-        var goal = await _db.Goals.FirstOrDefaultAsync(g => g.Id == goalId && g.UserId == userId);
+        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId && g.UserId == userId);
         if (goal is null) return NotFound(new { message = "Goal not found." });
 
         var log = new LogEntry
@@ -93,8 +91,8 @@ public class GoalsController : ControllerBase
             CreatedAt = DateTime.UtcNow,
         };
 
-        _db.Logs.Add(log);
-        await _db.SaveChangesAsync();
+        db.Logs.Add(log);
+        await db.SaveChangesAsync();
 
         return Ok(new LogDto(log.Id, log.Date, log.DurationSeconds, log.Note));
     }

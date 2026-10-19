@@ -25,6 +25,7 @@ public static class GoogleSignIn
         var subject = ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = ctx.Principal?.FindFirstValue(ClaimTypes.Email);
         var name = ctx.Principal?.FindFirstValue(ClaimTypes.Name);
+        var picture = ctx.Principal?.FindFirstValue("picture");
 
         var ownerEmail = config["OWNER_EMAIL"];
         if (subject is null || email is null || !IsAllowed(email, ownerEmail, config["ALLOWED_EMAILS"]))
@@ -58,6 +59,11 @@ public static class GoogleSignIn
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Name, user.Name ?? user.Email),
         };
+        // Lives only in the session cookie; it refreshes on the next sign-in.
+        if (picture is not null)
+        {
+            claims.Add(new Claim("picture", picture));
+        }
         ctx.Principal = new ClaimsPrincipal(
             new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
         ctx.Properties ??= new AuthenticationProperties();
