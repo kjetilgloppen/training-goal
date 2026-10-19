@@ -2,9 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, UnauthorizedError } from '../api'
-import type { Goal } from '../types'
+import type { CreateGoalRequest, Goal } from '../types'
 import { computeStats, toIso, parseDate, toSeconds, formatDuration } from '../pace'
 import ProgressChart from '../components/ProgressChart.vue'
+import NewGoalForm from '../components/NewGoalForm.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -81,6 +82,29 @@ async function addLog() {
     logMinutes.value = null
     logSeconds.value = null
     logNote.value = ''
+    await load()
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
+// edit-goal form
+const editingGoal = ref(false)
+// Bumped each time the editor opens, so a save that finishes after the editor was closed
+// and reopened does not close the newer editor.
+let goalEditSession = 0
+
+function startEditGoal() {
+  goalEditSession++
+  editingGoal.value = true
+}
+
+async function saveGoal(body: CreateGoalRequest) {
+  if (!goal.value) return
+  const session = goalEditSession
+  try {
+    await api.updateGoal(goal.value.id, body)
+    if (session === goalEditSession) editingGoal.value = false
     await load()
   } catch (e) {
     error.value = (e as Error).message
@@ -209,6 +233,21 @@ onMounted(load)
       </ul>
     </div>
 
-    <button class="danger" style="margin-top: 8px" @click="deleteGoal">Delete this goal</button>
+    <NewGoalForm
+      v-if="editingGoal"
+      :initial="{
+        name: goal.name,
+        targetCount: goal.targetCount,
+        unit: goal.unit,
+        periodStart: goal.periodStart,
+        periodEnd: goal.periodEnd,
+      }"
+      @update="saveGoal"
+      @cancel="editingGoal = false"
+    />
+    <div v-else class="goal-links">
+      <button class="link-btn" @click="startEditGoal">Edit goal</button>
+      <button class="link-btn danger" @click="deleteGoal">Delete goal</button>
+    </div>
   </div>
 </template>

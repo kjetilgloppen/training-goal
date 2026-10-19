@@ -3,27 +3,45 @@ import { ref } from 'vue'
 import type { CreateGoalRequest } from '../types'
 import { toIso } from '../pace'
 
-const emit = defineEmits<{ (e: 'create', goal: CreateGoalRequest): void }>()
+// With `initial` the form is an always-open edit form that emits `update`/`cancel`;
+// without it, it is the collapsible "new goal" form that emits `create`.
+const props = defineProps<{ initial?: CreateGoalRequest }>()
+const emit = defineEmits<{
+  (e: 'create', goal: CreateGoalRequest): void
+  (e: 'update', goal: CreateGoalRequest): void
+  (e: 'cancel'): void
+}>()
 
-const open = ref(false)
+const editing = !!props.initial
+const open = ref(editing)
 const thisYear = new Date().getFullYear()
 
-const name = ref('')
-const targetCount = ref<number | null>(100)
-const unit = ref('')
-const periodStart = ref(toIso(new Date(thisYear, 0, 1)))
-const periodEnd = ref(toIso(new Date(thisYear, 11, 31)))
+const name = ref(props.initial?.name ?? '')
+const targetCount = ref<number | null>(props.initial?.targetCount ?? 100)
+const unit = ref(props.initial?.unit ?? '')
+const periodStart = ref(props.initial?.periodStart ?? toIso(new Date(thisYear, 0, 1)))
+const periodEnd = ref(props.initial?.periodEnd ?? toIso(new Date(thisYear, 11, 31)))
 
 function submit() {
   if (!name.value || !targetCount.value) return
-  emit('create', {
+  const goal: CreateGoalRequest = {
     name: name.value.trim(),
     targetCount: targetCount.value,
     unit: unit.value.trim() || null,
     periodStart: periodStart.value,
     periodEnd: periodEnd.value,
-  })
-  reset()
+  }
+  if (editing) {
+    emit('update', goal)
+  } else {
+    emit('create', goal)
+    reset()
+  }
+}
+
+function cancel() {
+  if (editing) emit('cancel')
+  else reset()
 }
 
 function reset() {
@@ -38,7 +56,7 @@ function reset() {
   <div>
     <button v-if="!open" class="btn btn-primary btn-lg" @click="open = true">+ New goal</button>
     <div v-else class="card">
-      <h2>New goal</h2>
+      <h2>{{ editing ? 'Edit goal' : 'New goal' }}</h2>
       <form @submit.prevent="submit">
         <div class="field">
           <label>Name</label>
@@ -65,8 +83,10 @@ function reset() {
           </div>
         </div>
         <div class="row" style="margin-top: 4px">
-          <button type="submit" class="btn btn-primary" :disabled="!name || !targetCount">Create</button>
-          <button type="button" class="btn" @click="reset">Cancel</button>
+          <button type="submit" class="btn btn-primary" :disabled="!name || !targetCount">
+            {{ editing ? 'Save' : 'Create' }}
+          </button>
+          <button type="button" class="btn" @click="cancel">Cancel</button>
         </div>
       </form>
     </div>

@@ -134,6 +134,17 @@ button,
   border: none;
   color: var(--muted);
   padding: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.goal-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 8px;
+}
+.goal-links .link-btn {
+  text-decoration: underline;
 }
 .danger {
   color: var(--behind);

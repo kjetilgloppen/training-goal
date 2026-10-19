@@ -61,6 +61,30 @@ public class GoalsController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetGoal), new { id = goal.Id }, ToDto(goal));
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<GoalDto>> UpdateGoal(int id, [FromBody] CreateGoalRequest req)
+    {
+        if (req.PeriodEnd < req.PeriodStart)
+        {
+            return BadRequest(new { message = "PeriodEnd must be on or after PeriodStart." });
+        }
+
+        var userId = User.GetUserId();
+        var goal = await db.Goals
+            .Include(g => g.Logs.OrderBy(l => l.Date))
+            .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+        if (goal is null) return NotFound();
+
+        goal.Name = req.Name.Trim();
+        goal.TargetCount = req.TargetCount;
+        goal.PeriodStart = req.PeriodStart;
+        goal.PeriodEnd = req.PeriodEnd;
+        goal.Unit = string.IsNullOrWhiteSpace(req.Unit) ? null : req.Unit.Trim();
+
+        await db.SaveChangesAsync();
+        return ToDto(goal);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteGoal(int id)
     {
