@@ -2,9 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, UnauthorizedError } from '../api'
-import type { CreateGoalRequest, Goal } from '../types'
-import { computeStats, toIso, parseDate, toSeconds, formatDuration } from '../pace'
+import type { CreateGoalRequest, CreateLogRequest, Goal } from '../types'
+import { computeStats, parseDate, formatDuration } from '../pace'
 import ProgressChart from '../components/ProgressChart.vue'
+import LogForm from '../components/LogForm.vue'
 import NewGoalForm from '../components/NewGoalForm.vue'
 
 const route = useRoute()
@@ -14,13 +15,6 @@ const id = Number(route.params.id)
 const goal = ref<Goal | null>(null)
 const loading = ref(true)
 const error = ref('')
-
-// add-log form
-const logDate = ref(toIso(new Date()))
-const logHours = ref<number | null>(null)
-const logMinutes = ref<number | null>(null)
-const logSeconds = ref<number | null>(null)
-const logNote = ref('')
 
 const stats = computed(() => (goal.value ? computeStats(goal.value) : null))
 const unit = computed(() => goal.value?.unit || 'done')
@@ -70,18 +64,13 @@ async function load() {
   }
 }
 
-async function addLog() {
+const addForm = ref<InstanceType<typeof LogForm>>()
+
+async function addLog(body: CreateLogRequest) {
   if (!goal.value) return
   try {
-    await api.addLog(goal.value.id, {
-      date: logDate.value,
-      durationSeconds: toSeconds(logHours.value, logMinutes.value, logSeconds.value),
-      note: logNote.value.trim() || null,
-    })
-    logHours.value = null
-    logMinutes.value = null
-    logSeconds.value = null
-    logNote.value = ''
+    await api.addLog(goal.value.id, body)
+    addForm.value?.reset()
     await load()
   } catch (e) {
     error.value = (e as Error).message
@@ -197,25 +186,7 @@ onMounted(load)
 
     <div class="card">
       <h2>Log an entry</h2>
-      <form @submit.prevent="addLog">
-        <div class="field">
-          <label>Date</label>
-          <input v-model="logDate" type="date" />
-        </div>
-        <div class="field">
-          <label>Duration (optional)</label>
-          <div class="row">
-            <input v-model.number="logHours" type="number" min="0" placeholder="h" aria-label="hours" />
-            <input v-model.number="logMinutes" type="number" min="0" max="59" placeholder="m" aria-label="minutes" />
-            <input v-model.number="logSeconds" type="number" min="0" max="59" placeholder="s" aria-label="seconds" />
-          </div>
-        </div>
-        <div class="field">
-          <label>Note (optional)</label>
-          <input v-model="logNote" placeholder="e.g. Mt. Rainier, great weather" />
-        </div>
-        <button type="submit" class="btn btn-primary">Add entry</button>
-      </form>
+      <LogForm ref="addForm" submit-label="Add entry" @submit="addLog" />
     </div>
 
     <div class="card">
