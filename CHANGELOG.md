@@ -22,6 +22,7 @@ Workflow:
 - Google sign-in with an email allowlist (`ALLOWED_EMAILS`, `OWNER_EMAIL`) so others can test.
 - `Users` table; goals are owned by a user. Existing goals are claimed by `OWNER_EMAIL` on its
   first sign-in.
+- Show the Google profile picture instead of user name when available
 
 ### Changed
 

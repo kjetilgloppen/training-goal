@@ -7,6 +7,8 @@ const router = useRouter()
 const route = useRoute()
 const loggedIn = ref(false)
 const userName = ref('')
+const picture = ref('')
+const pictureFailed = ref(false)
 
 // Keep the header's user name and logout button in sync with the current route/session.
 watchEffect(async () => {
@@ -18,6 +20,8 @@ watchEffect(async () => {
     const me = await api.me()
     loggedIn.value = me.authenticated
     userName.value = me.name ?? me.email ?? ''
+    picture.value = me.picture ?? ''
+    pictureFailed.value = false
   } catch {
     loggedIn.value = false
   }
@@ -33,7 +37,18 @@ async function logout() {
 <template>
   <header class="app-header">
     <RouterLink to="/" class="brand">🏔️ Training Goals</RouterLink>
-    <span v-if="loggedIn" class="muted" style="font-size: 14px; margin-left: auto">{{ userName }}</span>
+    <img
+      v-if="loggedIn && picture && !pictureFailed"
+      :src="picture"
+      :alt="userName"
+      :title="userName"
+      referrerpolicy="no-referrer"
+      width="32"
+      height="32"
+      style="border-radius: 50%; margin-left: auto"
+      @error="pictureFailed = true"
+    />
+    <span v-else-if="loggedIn" class="muted" style="font-size: 14px; margin-left: auto">{{ userName }} </span>
     <button v-if="loggedIn" class="link-btn" @click="logout">Log out</button>
   </header>
   <main class="container">

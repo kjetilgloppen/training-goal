@@ -44,5 +44,6 @@ public class AuthController(GoogleAuthStatus google) : ControllerBase
             authenticated = User.Identity?.IsAuthenticated ?? false,
             name = User.FindFirstValue(ClaimTypes.Name),
             email = User.FindFirstValue(ClaimTypes.Email),
+            picture = User.FindFirstValue("picture"),
         });
 }

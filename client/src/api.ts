@@ -21,6 +21,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
 export interface CurrentUser {
   authenticated: boolean
   name: string | null
+  picture?: string | null
   email: string | null
 }
 
