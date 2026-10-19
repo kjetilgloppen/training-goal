@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { CreateLogRequest } from '../types'
-import { toIso, toSeconds } from '../pace'
+import { toIso, toSeconds, splitDuration } from '../pace'
 
-defineProps<{ submitLabel: string }>()
-const emit = defineEmits<{ (e: 'submit', log: CreateLogRequest): void }>()
+// With `initial` the form edits an existing entry and shows a Cancel button. Without it,
+// it is the "add entry" form; the parent calls `reset()` once the entry has been saved,
+// so a failed save keeps what the user typed.
+const props = defineProps<{ initial?: CreateLogRequest; submitLabel: string }>()
+const emit = defineEmits<{
+  (e: 'submit', log: CreateLogRequest): void
+  (e: 'cancel'): void
+}>()
 
-const date = ref(toIso(new Date()))
-const hours = ref<number | null>(null)
-const minutes = ref<number | null>(null)
-const seconds = ref<number | null>(null)
-const note = ref('')
+const { h, m, s } = splitDuration(props.initial?.durationSeconds ?? 0)
+
+const date = ref(props.initial?.date ?? toIso(new Date()))
+const hours = ref<number | null>(h || null)
+const minutes = ref<number | null>(m || null)
+const seconds = ref<number | null>(s || null)
+const note = ref(props.initial?.note ?? '')
 
 function submit() {
   emit('submit', {
@@ -20,8 +28,7 @@ function submit() {
   })
 }
 
-// Called by the parent once the entry has been saved, so a failed save keeps what the user
-// typed. Clears everything but the date, so several entries for one day are quick to add.
+// Clears everything but the date, so several entries for one day are quick to add.
 function reset() {
   hours.value = null
   minutes.value = null
@@ -50,6 +57,9 @@ defineExpose({ reset })
       <label>Note (optional)</label>
       <input v-model="note" placeholder="e.g. Mt. Rainier, great weather" />
     </div>
-    <button type="submit" class="btn btn-primary">{{ submitLabel }}</button>
+    <div :class="{ row: initial }">
+      <button type="submit" class="btn btn-primary">{{ submitLabel }}</button>
+      <button v-if="initial" type="button" class="btn" @click="emit('cancel')">Cancel</button>
+    </div>
   </form>
 </template>

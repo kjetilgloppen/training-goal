@@ -20,6 +20,8 @@ Workflow:
 - Edit goals (name, target, unit, period) via `PUT /api/goals/{id}`. "Edit goal" and
   "Delete goal" are now links at the bottom of the goal page. Logs outside an edited period
   are kept; the chart clamps them.
+- Edit history entries (date, duration, note) inline via `PUT /api/logs/{id}`; the "Log an
+  entry" card is hidden while an entry is being edited.
 - History list highlights repeat entries on the same day: the first entry is untinted and
   each subsequent same-day entry gets a progressively deeper blue background.
 - Google sign-in with an email allowlist (`ALLOWED_EMAILS`, `OWNER_EMAIL`) so others can test.

@@ -100,6 +100,22 @@ async function saveGoal(body: CreateGoalRequest) {
   }
 }
 
+// inline edit of a single log row
+const editLogId = ref<number | null>(null)
+
+async function saveLog(body: CreateLogRequest) {
+  const logId = editLogId.value
+  if (logId == null) return
+  try {
+    await api.updateLog(logId, body)
+    // Another entry may have been opened for editing while this save was pending.
+    if (editLogId.value === logId) editLogId.value = null
+    await load()
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
 async function deleteLog(logId: number) {
   try {
     await api.deleteLog(logId)
@@ -184,7 +200,7 @@ onMounted(load)
       </div>
     </div>
 
-    <div class="card">
+    <div v-show="editLogId === null" class="card">
       <h2>Log an entry</h2>
       <LogForm ref="addForm" submit-label="Add entry" @submit="addLog" />
     </div>
@@ -194,12 +210,28 @@ onMounted(load)
       <p v-if="goal.logs.length === 0" class="muted">No entries yet.</p>
       <ul class="log-list">
         <li v-for="l in sortedLogs" :key="l.id" :style="dupStyle(l.id)">
+          <div v-if="editLogId === l.id" style="width: 100%">
+            <h2>Edit entry · {{ fmtDate(l.date) }}</h2>
+            <LogForm
+              :initial="{ date: l.date, durationSeconds: l.durationSeconds, note: l.note }"
+              submit-label="Save"
+              @submit="saveLog"
+              @cancel="editLogId = null"
+            />
+          </div>
+          <template v-else>
           <span>
             <strong>{{ fmtDate(l.date) }}</strong>
             <span v-if="l.durationSeconds" class="muted"> · {{ formatDuration(l.durationSeconds) }}</span>
             <span v-if="l.note" class="muted"> · {{ l.note }}</span>
           </span>
           <span class="log-actions">
+            <button class="icon-btn" title="Edit entry" aria-label="Edit entry" @click="editLogId = l.id">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </button>
             <button class="icon-btn danger" title="Delete entry" aria-label="Delete entry" @click="deleteLog(l.id)">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 6h18" />
@@ -209,6 +241,7 @@ onMounted(load)
               </svg>
             </button>
           </span>
+          </template>
         </li>
       </ul>
     </div>

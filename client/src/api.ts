@@ -57,6 +57,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  updateLog: (id: number, body: CreateLogRequest) =>
+    request<LogEntry>(`/api/logs/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteLog: (id: number) =>
     request<void>(`/api/logs/${id}`, { method: 'DELETE' }),
 }

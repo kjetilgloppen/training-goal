@@ -8,7 +8,7 @@ Future work, roughly grouped. Check items off as they land, and record shipped o
 - [x] When two or more entires are added on the same date, give some kind of indicator for this, like color or small text, 2nd, 3rd, etc.
 - [ ] Let user zoom in chart
 - [ ] Chart should also be shown in it's own page and if user tilts the phone it should show in landscape mode (like Netatmo)
-- [ ] Edit existing goals and log entries (currently create + delete only).
+- [x] Edit existing goals and log entries (currently create + delete only).
 - [ ] Richer log fields (e.g. location / mountain name, distance, photo).
 - [ ] Let user add a background picture for each goal
 - [ ] Recurring or rolling periods; support more than one period per goal.
