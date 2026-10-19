@@ -92,7 +92,7 @@ async function saveGoal(body: CreateGoalRequest) {
   if (!goal.value) return
   const session = goalEditSession
   try {
-    await api.updateGoal(goal.value.id, body)
+    goal.value = await api.updateGoal(goal.value.id, body)
     if (session === goalEditSession) editingGoal.value = false
     await load()
   } catch (e) {
