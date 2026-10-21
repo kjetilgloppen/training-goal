@@ -28,6 +28,7 @@ Workflow:
 - `Users` table; goals are owned by a user. Existing goals are claimed by `OWNER_EMAIL` on its
   first sign-in.
 - Show the Google profile picture instead of user name when available
+- Make the user confirm the action before deleting a log entry
 
 ### Changed
 
@@ -36,6 +37,7 @@ Workflow:
 - Login cookie is `Secure` outside development, and forwarded headers are honoured behind
   Render's TLS proxy.
 - `/api/auth/me` now also returns the user's name and email; the header shows the name.
+- Switch average and total duration in the goal summary making the average the main information
 
 ### Removed
 
