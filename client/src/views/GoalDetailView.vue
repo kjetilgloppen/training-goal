@@ -191,11 +191,11 @@ onMounted(load)
         <div class="value">{{ stats.daysRemaining }}</div>
         <div class="label">Days left</div>
       </div>
-      <div class="stat" v-if="stats.totalDurationSeconds > 0">
-        <div class="value">{{ formatDuration(stats.totalDurationSeconds) }}</div>
+      <div class="stat" v-if="stats.avgDurationSeconds">
+        <div class="value">{{ formatDuration(stats.avgDurationSeconds) }}</div>
         <div class="label">
-          Total time<template v-if="stats.avgDurationSeconds">
-            · {{ formatDuration(stats.avgDurationSeconds) }} avg</template
+          Average<template v-if="stats.totalDurationSeconds > 0">
+            · {{ formatDuration(stats.totalDurationSeconds) }} total</template
           >
         </div>
       </div>

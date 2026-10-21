@@ -37,6 +37,7 @@ Workflow:
 - Login cookie is `Secure` outside development, and forwarded headers are honoured behind
   Render's TLS proxy.
 - `/api/auth/me` now also returns the user's name and email; the header shows the name.
+- Switch average and total duration in the goal summary making the average the main information
 
 ### Removed
 
