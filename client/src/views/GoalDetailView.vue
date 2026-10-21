@@ -116,7 +116,8 @@ async function saveLog(body: CreateLogRequest) {
   }
 }
 
-async function deleteLog(logId: number) {
+async function deleteLog(logId: number, logDate: string) {
+  if (!confirm(`Delete log entry for "${fmtDate(logDate)}" ?`)) return
   try {
     await api.deleteLog(logId)
     await load()
@@ -232,7 +233,7 @@ onMounted(load)
                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
             </button>
-            <button class="icon-btn danger" title="Delete entry" aria-label="Delete entry" @click="deleteLog(l.id)">
+            <button class="icon-btn danger" title="Delete entry" aria-label="Delete entry" @click="deleteLog(l.id, l.date)">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 6h18" />
                 <path d="M8 6V4h8v2" />

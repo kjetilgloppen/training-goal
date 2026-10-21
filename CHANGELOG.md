@@ -28,6 +28,7 @@ Workflow:
 - `Users` table; goals are owned by a user. Existing goals are claimed by `OWNER_EMAIL` on its
   first sign-in.
 - Show the Google profile picture instead of user name when available
+- Make the user confirm the action before deleting a log entry
 
 ### Changed
 
